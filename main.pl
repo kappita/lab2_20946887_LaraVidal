@@ -49,3 +49,28 @@ setSystemTrash(System, Trash, NewSystem):-
   cSystem(Name, Users, Drives, ActualU, ActualD, ActualR, CDate, _, _, System),
   %get_current_date_time(Date),
   cSystem(Name, Users, Drives, ActualU, ActualD, ActualR, CDate, Date, Trash, NewSystem).
+
+
+
+getDrivesLetters([], []) :- !.
+
+
+getDriveLetter(Drive, Letter):-
+  drive(Letter, _, _, _, Drive).
+
+
+getDrivesLetters([FirstElement | Rest], [Letter | NewList]) :-
+  getDriveLetter(FirstElement, Letter),
+  getDrivesLetters(Rest, NewList).
+
+
+system(Name, NewSystem) :-
+  cSystem(Name, [], [], [], [], [], "hora", "hora", [], NewSystem).
+
+addDrive(System, Name, Letter, Capacity, NewSystem) :-
+  getSystemDrives(System, Drives),
+  getDrivesLetters(Drives, Letters),
+  member(Letter, Letters) ->
+  setSystemDrives(System, Drives, NewSystem);
+  append([Letter, Name, Capacity, []], Drives, NewDrives),
+  setSystemDrives(System, NewDrives, NewSystem).
