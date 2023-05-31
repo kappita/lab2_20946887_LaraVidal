@@ -74,3 +74,16 @@ addDrive(System, Name, Letter, Capacity, NewSystem) :-
   setSystemDrives(System, Drives, NewSystem);
   append([Letter, Name, Capacity, []], Drives, NewDrives),
   setSystemDrives(System, NewDrives, NewSystem).
+
+register(System, User, NewSystem) :-
+  getSystemUsers(System, Users),
+  member(User, Users) ->
+  NewSystem is System;
+  append(User, Users, NewUsers),
+  setSystemUsers(System, NewUsers, NewSystem).
+
+login(System, User, NewSystem) :-
+  getSystemUsers(System, Users),
+  member(User, Users) ->
+  setSystemActualU(System, [User], NewSystem);
+  NewSystem is System.
