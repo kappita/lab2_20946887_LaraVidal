@@ -1,6 +1,8 @@
 cSystem(Name, Users, Drives, ActualU, ActualD, ActualR, CDate, MDate, Trash, [Name, Users, Drives, ActualU, ActualD, ActualR, CDate, MDate, Trash]).
 drive(Letter, Name, Capacity, Content, [Letter, Name, Capacity, Content]).
 
+%--------- SYSTEM---------%
+
 getSystemUsers(System, Users) :-
   cSystem(_, Users, _, _, _, _, _, _, _, System).
 
@@ -50,18 +52,65 @@ setSystemTrash(System, Trash, NewSystem):-
   %get_current_date_time(Date),
   cSystem(Name, Users, Drives, ActualU, ActualD, ActualR, CDate, Date, Trash, NewSystem).
 
-
-
-getDrivesLetters([], []) :- !.
-
+% ----- DRIVE ---------
 
 getDriveLetter(Drive, Letter):-
   drive(Letter, _, _, _, Drive).
 
+getDriveName(Drive, Name) :-
+  drive(_, Name, _, _, Drive).
+
+getDriveContent(Drive, Content) :-
+  drive(_, _, _, Content, Drive).
+
+setDriveContent(Drive, NewContent, NewDrive) :-
+  drive(Letter, Name, Capacity, _, Drive),
+  drive(Letter, Name, Capacity, NewContent, NewDrive).
+
+
+getDrivesLetters([], []) :- !.
 
 getDrivesLetters([FirstElement | Rest], [Letter | NewList]) :-
   getDriveLetter(FirstElement, Letter),
   getDrivesLetters(Rest, NewList).
+
+setDrivesByLetter([], _, _, []):- !.
+
+setDrivesByLetter([[Letter, _, _, _] | Rest], NewDrive, Letter, [NewDrive | NewDrives]):-
+  setDrivesByLetter(Rest, NewDrive, Letter, NewDrives).
+
+setDrivesByLetter([FirstDrive | Rest], NewDrive, Letter, [FirstDrive | NewDrives]) :-
+  setDrivesByLetter(Rest, NewDrive, Letter, NewDrives).
+
+addFolderToDrive(Drive, Element, Route, NewDrive) :-
+  listaVacia(Route) ->
+  getDriveContent(Drive, Content),
+  addFolderToContent(Content, Element, NewContent),
+  setDriveContent(Drive, NewContent, NewDrive);
+
+
+  partesLista(Route, H, T),
+  getDriveContent(Drive, Content),
+  getElementByName(Content, H, Folder),
+  addFolderToFolder(Folder, Element, T, NewFolder),
+  setContentByName(Content, NewFolder, NewContent),
+  setDriveContent(Drive, NewContent, NewDrive).
+
+addFileToDrive(Drive, Element, Route, NewDrive) :-
+  % If the route is empty
+  listaVacia(Route) ->
+  % then
+  getDriveContent(Drive, Content),
+  addFileToContent(Content, Element, NewContent),
+  setDriveContent(Drive, NewContent, NewDrive);
+
+  % else
+  partesLista(Route, H, T),
+  getDriveContent(Drive, Content),
+  getElementByName(Content, H, Folder),
+  addFolderToFolder(Folder, Element, T, NewFolder),
+  setContentByName(Content, NewFolder, NewContent),
+  setDriveContent(Drive, NewContent, NewDrive).
 
 
 system(Name, NewSystem) :-
