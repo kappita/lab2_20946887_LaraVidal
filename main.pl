@@ -1,5 +1,17 @@
+listaVacia([]) :- true.
+listaVacia([_ | _]) :- false.
+
+isFile("file") :- true.
+isFile(_) :- false.
+
+partesLista([H | T], H, T).
+
 cSystem(Name, Users, Drives, ActualU, ActualD, ActualR, CDate, MDate, Trash, [Name, Users, Drives, ActualU, ActualD, ActualR, CDate, MDate, Trash]).
 drive(Letter, Name, Capacity, Content, [Letter, Name, Capacity, Content]).
+folder(Type, Name, Author, Content, Security, CDate, MDate, [Type, Name, Author, Content, Security, CDate, MDate, Password]).
+file(Type, Name, Ext, Content, Security, CDate, MDate, [Type, Name, Ext, Content, Security, CDate, MDate, Password]).
+element(Type, Name, Extra, Content, Security, CDate, MDate, [Type, Name, Extra, Content, Security, CDate, MDate]).
+content(Contents, Contents).
 
 %--------- SYSTEM---------%
 
@@ -68,6 +80,7 @@ setDriveContent(Drive, NewContent, NewDrive) :-
   drive(Letter, Name, Capacity, NewContent, NewDrive).
 
 
+
 getDrivesLetters([], []) :- !.
 
 getDrivesLetters([FirstElement | Rest], [Letter | NewList]) :-
@@ -111,6 +124,44 @@ addFileToDrive(Drive, Element, Route, NewDrive) :-
   addFolderToFolder(Folder, Element, T, NewFolder),
   setContentByName(Content, NewFolder, NewContent),
   setDriveContent(Drive, NewContent, NewDrive).
+
+
+%---------- CONTENT ------------
+
+getContentNames([], []) :- !.
+getContentNames([FirstElement | Rest], [Name | NewList]) :-
+  getElementName(FirstElement, Name),
+  getContentNames(Rest, NewList).
+
+
+getElementByName([], _, _) :- false.
+
+getElementByName([[Type, Name, Extra, Content, Security, CDate, Mdate] | _ ], Name, [Type, Name, Extra, Content, Security, CDate, Mdate]).
+
+getElementByName([ _ | T], Name, Element) :-
+  getElementByName(T, Name, Element).
+
+setContentByName([], _, []) :- !.
+
+setContentByName([[_, Name, _, _, _, _, _] | Rest], [Type, Name, Extra, Content, Security, CDate, MDate], [[Type, Name, Extra, Content, Security, CDate, MDate] | NewContent]) :-
+  setContentByName(Rest, [Type, Name, Extra, Content, Security, CDate, MDate], NewContent).
+
+setContentByName([FirstElement | Rest], NewElement, [FirstElement | NewContent]):-
+  setContentByName(Rest, NewElement, NewContent).
+
+addFolderToContent(Content, Element, NewContent) :- 
+  getElementName(Element, Name),
+  getContentNames(Content, Names),
+  member(Name, Names) ->
+  fail;
+  append(Element, Content, NewContent).
+
+addFileToContent(Content, Element, NewContent) :-
+  getElementName(Element, Name),
+  getContentNames(Content, Names),
+  member(Name, Names) ->
+  setContentByName(Content, Element, NewContent);
+  append(Element, Content, NewContent).
 
 
 system(Name, NewSystem) :-
