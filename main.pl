@@ -167,23 +167,34 @@ addFileToContent(Content, Element, NewContent) :-
 system(Name, NewSystem) :-
   cSystem(Name, [], [], [], [], [], "hora", "hora", [], NewSystem).
 
-addDrive(System, Name, Letter, Capacity, NewSystem) :-
+systemAddDrive(System, _, Letter, _, NewSystem) :-
   getSystemDrives(System, Drives),
   getDrivesLetters(Drives, Letters),
-  member(Letter, Letters) ->
-  setSystemDrives(System, Drives, NewSystem);
-  append([Letter, Name, Capacity, []], Drives, NewDrives),
+  member(Letter, Letters),
+  setSystemDrives(System, Drives, NewSystem).
+
+systemAddDrive(System, Name, Letter, Capacity, NewSystem) :-
+  getSystemDrives(System, Drives),
+  append([[Letter, Name, Capacity, []]], Drives, NewDrives),
   setSystemDrives(System, NewDrives, NewSystem).
 
-register(System, User, NewSystem) :-
+systemRegister(System, User, NewSystem) :-
   getSystemUsers(System, Users),
-  member(User, Users) ->
-  NewSystem is System;
-  append(User, Users, NewUsers),
+  \+ member(User, Users),
+  append([User], Users, NewUsers),
   setSystemUsers(System, NewUsers, NewSystem).
 
-login(System, User, NewSystem) :-
+systemRegister(System, _, System).
+
+
+systemLogin(System, User, NewSystem) :-
   getSystemUsers(System, Users),
-  member(User, Users) ->
-  setSystemActualU(System, [User], NewSystem);
-  NewSystem is System.
+  member(User, Users),
+  setSystemActualU(System, User, NewSystem).
+
+systemLogin(System, _, System).
+
+systemLogout(System, NewSystem) :-
+  getSystemActualU(System, User),
+  \+ listaVacia(User),
+  setSystemActualU(System, [], NewSystem).
