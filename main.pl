@@ -128,45 +128,17 @@ addFileToDrive(Drive, Element, Route, NewDrive) :-
 
 %---------- CONTENT ------------
 
-getContentNames([], []) :- !.
-getContentNames([FirstElement | Rest], [Name | NewList]) :-
-  getElementName(FirstElement, Name),
-  getContentNames(Rest, NewList).
 
-
-getElementByName([], _, _) :- false.
-
-getElementByName([[Type, Name, Extra, Content, Security, CDate, Mdate] | _ ], Name, [Type, Name, Extra, Content, Security, CDate, Mdate]).
-
-getElementByName([ _ | T], Name, Element) :-
-  getElementByName(T, Name, Element).
-
-setContentByName([], _, []) :- !.
-
-setContentByName([[_, Name, _, _, _, _, _] | Rest], [Type, Name, Extra, Content, Security, CDate, MDate], [[Type, Name, Extra, Content, Security, CDate, MDate] | NewContent]) :-
-  setContentByName(Rest, [Type, Name, Extra, Content, Security, CDate, MDate], NewContent).
-
-setContentByName([FirstElement | Rest], NewElement, [FirstElement | NewContent]):-
-  setContentByName(Rest, NewElement, NewContent).
-
-addFolderToContent(Content, Element, NewContent) :- 
-  getElementName(Element, Name),
-  getContentNames(Content, Names),
-  member(Name, Names) ->
-  fail;
-  append(Element, Content, NewContent).
-
-addFileToContent(Content, Element, NewContent) :-
-  getElementName(Element, Name),
-  getContentNames(Content, Names),
-  member(Name, Names) ->
-  setContentByName(Content, Element, NewContent);
-  append(Element, Content, NewContent).
-
-
+%--- Funciones
+% Dominio: String X System
+% Descripción: Entrega un sistema con el nombre entregado
+% Método: n/a
 system(Name, NewSystem) :-
   cSystem(Name, [], [], [], [], [], "hora", "hora", [], NewSystem).
 
+% Dominio: System X String X String or Char X int X System
+% Descripción: Agrega un drive al sistema la información entregada
+% Método: n/a
 systemAddDrive(System, _, Letter, _, NewSystem) :-
   getSystemDrives(System, Drives),
   getDrivesLetters(Drives, Letters),
@@ -178,6 +150,9 @@ systemAddDrive(System, Name, Letter, Capacity, NewSystem) :-
   append([[Letter, Name, Capacity, []]], Drives, NewDrives),
   setSystemDrives(System, NewDrives, NewSystem).
 
+% Dominio: System X String X System
+% Descripción: Registra un usuario en el sistema
+% Método: n/a
 systemRegister(System, User, NewSystem) :-
   getSystemUsers(System, Users),
   \+ member(User, Users),
@@ -186,7 +161,9 @@ systemRegister(System, User, NewSystem) :-
 
 systemRegister(System, _, System).
 
-
+% Dominio: System X String X System
+% Descripción: Inicia sesión en el sistema con el usuario entregado
+% Método: n/a
 systemLogin(System, User, NewSystem) :-
   getSystemUsers(System, Users),
   member(User, Users),
@@ -194,7 +171,22 @@ systemLogin(System, User, NewSystem) :-
 
 systemLogin(System, _, System).
 
+% Dominio: System X System
+% Descripción: Cierra la sesión del usuario actual en el sistema
+% Método: 
 systemLogout(System, NewSystem) :-
   getSystemActualU(System, User),
   \+ listaVacia(User),
   setSystemActualU(System, [], NewSystem).
+
+% Dominio: System X String or Char, System
+% Descripción: Selecciona el drive a ser utilizado en el sistema
+% Método: n/a
+systemSwitchDrive(System, Letter, NewSystem) :-
+  getSystemActualU(System, U),
+  \+ listaVacia(U),
+  getSystemDrives(System, Drives),
+  getDrivesLetters(Drives, Letters),
+  member(Letter, Letters),
+  setSystemActualD(System, [Letter], NewSystemMid),
+  setSystemActualR(NewSystemMid, [Letter], NewSystem).
