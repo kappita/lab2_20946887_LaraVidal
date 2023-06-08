@@ -53,3 +53,132 @@ getElementsFromDrive(Drive, Pattern, [H | T], Elements) :-
   getDriveContent(Drive, Content),
   getElementByName(Content, H, Element),
   getElementsFromFolder(Element, Pattern, T, Elements).
+
+% Dominio: Drive x Element x Lista(String) x Drive
+% Descripción: Agrega un elemento a los contenidos del drive en la ruta.
+% Método: n/a
+addElementToDrive(Drive, Element, Route, NewDrive) :-
+  listaVacia(Route),
+  getDriveContent(Drive, Content),
+  addElementToContent(Content, Element, NewContent),
+  setDriveContent(Drive, NewContent, NewDrive).
+
+addElementToDrive(Drive, Element, Route, NewDrive) :-
+  partesLista(Route, H, T),
+  getDriveContent(Drive, Content),
+  getElementByName(Content, H, Folder),
+  addElementToFolder(Folder, Element, T, NewFolder),
+  setContentByName(Content, NewFolder, NewContent),
+  setDriveContent(Drive, NewContent, NewDrive).
+
+% Dominio: Drive x Lista(Elemento) x Lista(string) x Drive
+% Descripción: Agrega una lista de elementos a los contenidos del drive en la ruta.
+% Método: n/a
+addElementsToDrive(Drive, Elements, Route, NewDrive) :-
+  listaVacia(Route),
+  getDriveContent(Drive, Content),
+  addElementsToContent(Content, Elements, NewContent),
+  setDriveContent(Drive, NewContent, NewDrive).
+
+addElementsToDrive(Drive, Elements, Route, NewDrive) :-
+  partesLista(Route, H, T),
+  getDriveContent(Drive, Content),
+  getElementByName(Content, H, Folder),
+  addElementsToFolder(Folder, Elements, T, NewFolder),
+  setContentByName(Content, NewFolder, NewContent),
+  setDriveContent(Drive, NewContent, NewDrive).
+
+% Dominio: Drive x String x Lista(string) x Drive
+% Descripción: Filtra los elementos que cumplan un patrón de la ruta del contenido del drive
+% Método: n/a
+filterElementsFromDrive(Drive, Pattern, Route, NewDrive) :-
+  listaVacia(Route),
+  getDriveContent(Drive, Content),
+  filterElementsFromContent(Content, Pattern, NewContent),
+  setDriveContent(Drive, NewContent, NewDrive).
+
+filterElementsFromDrive(Drive, Pattern, Route, NewDrive) :-
+  partesLista(Route, H, T),
+  getDriveContent(Drive, Content),
+  getElementByName(Content, H, Folder),
+  filterElementsFromFolder(Folder, Pattern, T, NewFolder),
+  setContentByName(Content, NewFolder, NewContent),
+  setDriveContent(Drive, NewContent, NewDrive).
+
+% Dominio: Drive x Lista(String)
+% Descripción: Confirma que una ruta exista en el drive.
+% Método: n/a
+checkRouteExistsDrive(_, []).
+
+checkRouteExistsDrive(Drive, [H | T]) :-
+  getDriveContent(Drive, Content),
+  getElementByName(Content, H, Element),
+  checkRouteExistsFolder(Element, T).
+
+% Dominio: Lista(Drive) x String x Lista(String) x Lista(Element)
+% Descripción: Obtiene los elementos que cumplan un patrón de la lista de drives.
+% Método: n/a
+getElementsFromDrives(Drives, Pattern, [H | T], Elements) :-
+  getDriveByLetter(Drives, H, Drive),
+  getElementsFromDrive(Drive, Pattern, T, Elements).
+
+% Dominio: Lista(Drive) x Element x Lista(String) x Lista(Drives)
+% Descripción: Agrega un elemento a la lista de drives en la ruta.
+% Método: n/a
+addElementToDrives(Drives, Element, [H | T], NewDrives) :-
+  getDriveByLetter(Drives, H, Drive),
+  addElementToDrive(Drive, Element, T, NewDrive),
+  setDrivesByLetter(Drives, NewDrive, H, NewDrives).
+
+% Dominio: Lista(Drive) x Lista(Element) x Lista(String) x Lista(Drive)
+% Descripción: Agrega una lista de elementos a la lista de drives en la ruta.
+% Método: n/a
+addElementsToDrives(Drives, Elements, [H | T], NewDrives) :-
+  getDriveByLetter(Drives, H, Drive),
+  addElementsToDrive(Drive, Elements, T, NewDrive),
+  setDrivesByLetter(Drives, NewDrive, H, NewDrives).
+
+% Dominio: Lista(Drive) x String x Lista(string) x Lista(Drive)
+% Descripción: Filtra los elementos que cumplan un patrón en la ruta de la lista de drives.
+% Método: 
+filterElementsFromDrives(Drives, Pattern, [H | T], NewDrives) :-
+  getDriveByLetter(Drives, H, Drive),
+  filterElementsFromDrive(Drive, Pattern, T, NewDrive),
+  setDrivesByLetter(Drives, NewDrive, H, NewDrives).
+
+% Dominio: Lista(Drive) x String x Drive
+% Descripción: Obtiene un drive de la lista de drives a partir de su letra
+% Método: n/a
+getDriveByLetter([[Letter, Name, Capacity, Content] | _], Letter, Drive) :-
+  drive(Letter, Name, Capacity, Content, Drive).
+
+getDriveByLetter([_ | T], Letter, Drive) :-
+  getDriveByLetter(T, Letter, Drive).
+
+
+% Dominio: Lista(Drive) x Lista(string)
+% Descripción: Obtiene las letras de todos los drives de la lista.
+% Método: 
+getDrivesLetters([], []) :- !.
+
+getDrivesLetters([FirstElement | Rest], [Letter | NewList]) :-
+  getDriveLetter(FirstElement, Letter),
+  getDrivesLetters(Rest, NewList).
+
+% Dominio: Lista(Drive) X Drive X String X Lista(Drive)
+% Descripción: Reemplaza un drive de la lista a partir de su letra
+% Método: 
+setDrivesByLetter([], _, _, []):- !.
+
+setDrivesByLetter([[Letter, _, _, _] | Rest], NewDrive, Letter, [NewDrive | NewDrives]):-
+  setDrivesByLetter(Rest, NewDrive, Letter, NewDrives).
+
+setDrivesByLetter([FirstDrive | Rest], NewDrive, Letter, [FirstDrive | NewDrives]) :-
+  setDrivesByLetter(Rest, NewDrive, Letter, NewDrives).
+
+% Dominio: Lista(Drive) x Lista(String)
+% Descripción: Confirma que una ruta exista en la lista de drives.
+% Método: 
+checkRouteExistsDrives(Drives, [H | T]) :-
+  getDriveByLetter(Drives, H, Drive),
+  checkRouteExistsDrive(Drive, T).

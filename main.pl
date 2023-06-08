@@ -190,3 +190,16 @@ systemSwitchDrive(System, Letter, NewSystem) :-
   member(Letter, Letters),
   setSystemActualD(System, [Letter], NewSystemMid),
   setSystemActualR(NewSystemMid, [Letter], NewSystem).
+
+% Dominio: System X String X System
+% Descripción: Añade una carpeta en el sistema con el nombre entregado, en la ruta actual
+% Método: n/a
+systemMkdir(System, Name, NewSystem) :-
+  getSystemActualU(System, U),
+  getSystemActualR(System, Route),
+  element("folder", Name, U, [], [], "Date", "Date", 0, NewElement),
+  getSystemDrives(System, Drives),
+  addElementToDrives(Drives, NewElement, Route, NewDrives),
+  setSystemDrives(System, NewDrives, NewSystem).
+
+
