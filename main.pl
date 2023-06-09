@@ -202,4 +202,22 @@ systemMkdir(System, Name, NewSystem) :-
   addElementToDrives(Drives, NewElement, Route, NewDrives),
   setSystemDrives(System, NewDrives, NewSystem).
 
+% Dominio: System X File X System
+% Descripción: Agrega un archivo al sistema en la ruta actual.
+% Método: n/a
+systemAddFile(System, Name, NewSystem) :-
+  getSystemActualU(System, U),
+  getSystemActualR(System, Route),
+  element("file", Name, U, [], [], "Date", "Date", 0, NewElement),
+  getSystemDrives(System, Drives),
+  addElementToDrives(Drives, NewElement, Route, NewDrives),
+  setSystemDrives(System, NewDrives, NewSystem).
 
+% Dominio: System X String X System
+% Descripción: Elimina todos elementos que cumplan el patrón entregado, en la ruta actual del sistema
+% Método: n/a
+systemDel(System, Pattern, NewSystem) :-
+  getSystemActualR(System, Route),
+  getElementsFromSystem(System, Pattern, Route, Elements),
+  filterElementsFromSystem(System, Pattern, Route, NewInnerSystem),
+  sendToTrash(NewInnerSystem, Elements, Route, NewSystem).

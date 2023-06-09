@@ -119,3 +119,47 @@ getElementsFromSystem(System, Pattern, Route, Elements) :-
 getElementsFromSystem(System, Pattern, Route, Elements) :-
   getSystemDrives(System, Drives),
   getElementsFromDrives(Drives, Pattern, Route, Elements).
+
+% Dominio: System x Element x List(String) x System
+% Descripción: Agrega un elemento al sistema en la ruta.
+% Método: n/a
+addElementToSystem(System, Element, Route, NewSystem) :-
+  getSystemDrives(System, Drives),
+  addElementToDrives(Drives, Element, Route, NewDrives),
+  setSystemDrives(System, NewDrives, NewSystem).
+
+% Dominio: System x Lista(Element) x List(String) x System
+% Descripción: Agrega una lista de elementos al sistema en la ruta indicada
+% Método: n/a
+addElementsToSystem(System, Elements, Route, NewSystem) :-
+  getSystemDrives(System, Drives),
+  addElementsToDrives(Drives, Elements, Route, NewDrives),
+  setSystemDrives(System, NewDrives, NewSystem).
+
+% Dominio: System x String x Lista(String) x System
+% Descripción: Elimina los elementos que cumplan cierto patrón en una ruta en el sistema
+% Método: n/a
+filterElementsFromSystem(System, Pattern, Route, NewSystem) :-
+  getSystemDrives(System, Drives),
+  filterElementsFromDrives(Drives, Pattern, Route, NewDrives),
+  setSystemDrives(System, NewDrives, NewSystem).
+
+% Dominio: System x Lista(Elemento) x Lista(String) x System
+% Descripción: Envía elementos a la papelera del sistema
+% Método: n/a
+sendToTrash(System, Elements, Route, NewSystem) :-
+  getSystemTrash(System, Trash),
+  addElementsToTrash(Trash, Elements, Route, NewTrash),
+  setSystemTrash(System, NewTrash, NewSystem).
+
+% Dominio: Trash x Lista(Elemento) x Lista(string) x Trash
+% Descripción: Agrega elementos a la papelera con la ruta de origen
+% Método: Recursión
+% Probar reordenar.
+addElementsToTrash(_, [], _, []) :- !.
+
+addElementsToTrash(Trash, [H | T], Route, [[H, Route] |NewTrash]) :-
+  addElementsToTrash(Trash, T, Route, NewTrash).
+
+
+
