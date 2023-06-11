@@ -1,8 +1,12 @@
 :- module(content, [getContentNames/2, getElementByName/3, getElementsFromContent/3,
   setContentByName/3, addElementToContent/3, addElementsToContent/3,
-  filterElementsFromContent/3]).
+  filterElementsFromContent/3, encryptElements/4, fullEncryptContent/3,
+  getStringFromContent/3, renameElementFromContent/4, fullDecryptContent/3,
+  decryptElements/4]).
 
 :- use_module(element).
+
+equal(A, A).
 
 % Dominio: Lista (Elementos) x Lista(Strings)
 % Descripción: Obtiene una lista con el nombre de todos los elementos
@@ -83,7 +87,7 @@ addOrReplaceToContent(Content, Element, NewContent) :-
 % Dominio: Lista(Elementos) x Lista(Elementos) x Lista(Elementos)
 % Descripción: Agrega una lista de elementos, reemplazando si ya existe un elemento con el nombre
 % Método: Recursión
-addElementsToContent(Content, [], Content):- !.
+addElementsToContent(Content, [], Content).
 
 addElementsToContent(Content, [Element | Rest], NewContent) :-
   addOrReplaceToContent(Content, Element, NewInnerContent),
@@ -92,7 +96,7 @@ addElementsToContent(Content, [Element | Rest], NewContent) :-
 % Dominio: Lista(Elementos) x string x Lista(Elementos)
 % Descripción: Elimina los elementos que cumplan cierto patrón.
 % Método: Backtracking
-filterElementsFromContent([], _, []):- !.
+filterElementsFromContent([], _, []).
 
 filterElementsFromContent([Element | Rest], Pattern, [Element | NewList]) :-
   \+ matchPattern(Element, Pattern),
@@ -100,3 +104,28 @@ filterElementsFromContent([Element | Rest], Pattern, [Element | NewList]) :-
 
 filterElementsFromContent([_ | Rest], Pattern, NewList) :-
   filterElementsFromContent(Rest, Pattern, NewList).
+
+% Dominio: Lista(Elementos) x String x String x Lista(Elementos)
+% Descripción: Renombra un elemento de los contenidos.
+% Método: Backtracking
+renameElementFromContent([], _, _, []):- !.
+
+renameElementFromContent([Element | Rest], Original, NewName, [NewElement | NewList]) :-
+  getElementName(Element, Name),
+  equal(Original, Name),
+  setElementName(Element, NewName, NewElement),
+  renameElementFromContent(Rest, Original, NewName, NewList).
+
+renameElementFromContent([Element | Rest], Original, NewName, [Element | NewList]) :-
+  renameElementFromContent(Rest, Original, NewName, NewList).
+
+% Dominio: Lista(Elemento) x Lista(String) x String
+% Descripción: Crea un string con el nombre de todos los elementos de la lista
+% Método: Backtracking
+getStringFromContent([], _, "").
+
+getStringFromContent([H | T], Parameters, Result) :-
+  getStringFromContent(T, Parameters, InnerResult),
+  getStringFromElement(H, Parameters, Name),
+  string_concat(Name, '\n', InnerString),
+  string_concat(InnerString, InnerResult, Result).

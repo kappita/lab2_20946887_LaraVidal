@@ -3,12 +3,18 @@
   addElementsToDrive/4, filterElementsFromDrive/4, checkRouteExistsDrive/2,
   checkRouteExistsDrives/2, getElementsFromDrives/4, addElementToDrives/4,
   addElementsToDrives/4, filterElementsFromDrives/4, getDrivesLetters/2,
-  setDrivesByLetter/4]).
+  setDrivesByLetter/4, renameElementFromDrives/5, getStringFromDrives/4,
+  encryptDrives/5, encryptDrive/5, decryptDrives/5, decryptDrive/5,
+  formatDrive/4]).
 
 :- use_module(content).
 :- use_module(element).
+:- use_module(datestring).
 
-partesLista( [ H | T], H, T).
+% Dominio: 
+% Descripción: 
+% Método: 
+partesLista([H | T], H, T).
 
 drive(Letter, Name, Capacity, Content, [Letter, Name, Capacity, Content]).
 
@@ -182,3 +188,54 @@ setDrivesByLetter([FirstDrive | Rest], NewDrive, Letter, [FirstDrive | NewDrives
 checkRouteExistsDrives(Drives, [H | T]) :-
   getDriveByLetter(Drives, H, Drive),
   checkRouteExistsDrive(Drive, T).
+
+% Dominio: Drive X String X String X List(String) X Drive
+% Descripción: Renombra el elemento del drive en la ruta indicada
+% Método: n/a
+renameElementFromDrive(Drive, Original, NewName, [], NewDrive) :-
+  getDriveContent(Drive, Content),
+  renameElementFromContent(Content, Original, NewName, NewContent),
+  setDriveContent(Drive, NewContent, NewDrive).
+
+renameElementFromDrive(Drive, Original, NewName, [H | T], NewDrive) :-
+  getDriveContent(Drive, Content),
+  getElementByName(Content, H, Folder),
+  renameElementFromFolder(Folder, Original, NewName, T, NewFolder),
+  setContentByName(Content, NewFolder, NewContent),
+  setDriveContent(Drive, NewContent, NewDrive).
+
+% Dominio: Drives X String X String X List(String) X Drives
+% Descripción: Renombra el elemento de los drives en la ruta indicada
+% Método: n/a
+renameElementFromDrives(Drives, Original, NewName, [H | T], NewDrives) :-
+  getDriveByLetter(Drives, H, Drive),
+  renameElementFromDrive(Drive, Original, NewName, T, NewDrive),
+  setDrivesByLetter(Drives, NewDrive, H, NewDrives).
+
+% Dominio: Drive X List(String) X List(String) X String
+% Descripción: Obtiene el string de los elementos en la ruta indicada
+% Método: n/a
+getStringFromDrive(Drive, Parameters, [], String) :-
+  getDriveContent(Drive, Content),
+  getStringFromContent(Content, Parameters, String).
+
+getStringFromDrive(Drive, Parameters, [H | T], String) :-
+  getDriveContent(Drive, Content),
+  getElementByName(Content, H, InnerFolder),
+  getStringFromFolder(InnerFolder, Parameters, T, String).
+
+% Dominio: Drives X Lista(String) X Lista(String) X String
+% Descripción: Obtiene el string de los elementos en la ruta indicada
+% Método: n/a
+getStringFromDrives(Drives, Parameters, [H | T], String) :-
+  getDriveByLetter(Drives, H, Drive),
+  getStringFromDrive(Drive, Parameters, T, String).
+
+% Dominio: Drives X Char X String X Drives
+% Descripción: Formatea el drive con la letra, y cambia su nombre
+% Método: n/a
+formatDrive(Drives, Letter, Name, NewDrives) :-
+  getDriveByLetter(Drives, Letter, Drive),
+  drive(_, _, Capacity, _, Drive),
+  drive(Letter, Name, Capacity, [], NewDrive),
+  setDrivesByLetter(Drives, NewDrive, Letter, NewDrives).
