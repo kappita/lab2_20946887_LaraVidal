@@ -226,3 +226,186 @@ getStringFromFolder(Folder, Parameters, [H | T], String) :-
   getElementContent(Folder, Content),
   getElementByName(Content, H, InnerFolder),
   getStringFromFolder(InnerFolder, Parameters, T, String).
+
+% Dominio: Element X String X Element
+% Descripción: Encripta inicialmente el elemento, es decir, no modifica su nombre
+% Método: n/a
+partialEncrypt(Element, Password, NewElement) :-
+  element(Type, Name, Extra, Content, Security, CDate, MDate, _, Element),
+  isFile(Type),
+  getPasswordEncryptionValue(Password, Value),
+  getPasskey(Password, Passkey),
+  encryptString(Content, Value, NewContent),
+  element(Type, Name, Extra, NewContent, Security, CDate, MDate, Passkey, NewElement).
+
+partialEncrypt(Element, Password, NewElement) :-
+  element(Type, Name, Extra, Content, Security, CDate, MDate, _, Element),
+  \+ isFile(Type),
+  getPasskey(Password, Passkey),
+  fullEncryptContent(Content, Password, NewContent),
+  element(Type, Name, Extra, NewContent, Security, CDate, MDate, Passkey, NewElement).
+
+% Dominio: Element X String X Element
+% Descripción: Encripta totalmente el elemento, es decir, su nombre y su contenido
+% Método: n/a
+fullEncrypt(Element, Password, NewElement) :-
+  element(Type, Name, Extra, Content, Security, CDate, MDate, _, Element),
+  isFile(Type),
+  getPasswordEncryptionValue(Password, Value),
+  getPasskey(Password, Passkey),
+  encryptString(Name, Value, NewName),
+  encryptString(Content, Value, NewContent),
+  element(Type, NewName, Extra, NewContent, Security, CDate, MDate, Passkey, NewElement).
+
+fullEncrypt(Element, Password, NewElement) :-
+  element(Type, Name, Extra, Content, Security, CDate, MDate, _, Element),
+  getPasswordEncryptionValue(Password, Value),
+  getPasskey(Password, Passkey),
+  encryptString(Name, Value, NewName),
+  fullEncryptContent(Content, Password, NewContent),
+  element(Type, NewName, Extra, NewContent, Security, CDate, MDate, Passkey, NewElement).
+
+% Dominio: List(Char) X int
+% Descripción: Obtiene la suma de los valores ASCII de todos los caracteres
+% Método: Backtracking
+sumAscii([], 0).
+
+sumAscii([H | T], Total) :-
+  sumAscii(T, TotalAcc),
+  char_code(H, Code),
+  Total is Code + TotalAcc.
+
+% Dominio: String X Int
+% Descripción: Obtiene el valor para encriptar los elementos
+% Método: n/a
+getPasswordEncryptionValue(Pass, Key) :-
+  atom_chars(Pass, Chars),
+  sumAscii(Chars, Total),
+  Key is Total mod 5.
+
+% Dominio: List(Char) X Int X List(Char)
+% Descripción: Encripta los caracteres sumándole Key a cada valor ascii
+% Método: Backtracking
+encryptChars([], _, []).
+
+encryptChars([H | T], Key, [NewChar | NewChars]) :-
+  encryptChars(T, Key, NewChars),
+  char_code(H, Code),
+  Char is Code + Key,
+  char_code(NewChar, Char).
+
+% Dominio: String X Int X String
+% Descripción: Encripta un string sumándole Key al valor ascii de cada caracter
+% Método: n/a
+encryptString(String, Key, NewString) :-
+  atom_chars(String, Chars),
+  encryptChars(Chars, Key, ModifiedChars),
+  atomic_list_concat(ModifiedChars, Atoms),
+  atom_string(Atoms, NewString).
+  
+% Dominio: List(Char) X Int X Int
+% Descripción: Sumatoria de la multiplicación del valor ascii de cada caracter por su posición de derecha a izquierda
+% Método: Backtracking
+mulAscii([], 0, 0).
+
+mulAscii([H | T], Multiplier, Total) :-
+  mulAscii(T, InnerMultiplier, TotalAcc),
+  Multiplier is InnerMultiplier + 1,
+  char_code(H, Code),
+  Value is Code * Multiplier,
+  Total is TotalAcc + Value.
+
+% Dominio: String X Int
+% Descripción: Obtiene el valor para descubrir la contraseña sin guardarla directamente
+% Método: n/a
+getPasskey(Pass, Key) :-
+  atom_chars(Pass, Chars),
+  mulAscii(Chars, _, Key).
+
+% Dominio: Element X String X String X List(String) X Element
+% Descripción: Encripta los elementos en la ruta indicada
+% Método: Recursión
+encryptFolder(Folder, Password, Pattern, [], NewFolder) :-
+  getElementContent(Folder, Content),
+  encryptElements(Content, Password, Pattern, NewContent),
+  setElementContent(Folder, NewContent, NewFolder).
+
+encryptFolder(Folder, Password, Pattern, [H | T], NewFolder) :-
+  getElementContent(Folder, Content),
+  getElementByName(Content, H, InnerFolder),
+  encryptFolder(InnerFolder, Password, Pattern, T, NewInnerFolder),
+  setContentByName(Content, NewInnerFolder, NewContent),
+  setElementContent(Folder, NewContent, NewFolder).
+
+% Dominio: List(Char) X Int X List(Char)
+% Descripción: Desencripta los caracteres restando Key a su valor ascii
+% Método: Backtracking
+decryptChars([], _, []).
+
+decryptChars([H | T], Key, [NewChar | NewChars]) :-
+  decryptChars(T, Key, NewChars),
+  char_code(H, Code),
+  Char is Code - Key,
+  char_code(NewChar, Char).
+
+% Dominio: String X int X String
+% Descripción: Desencripta el string restando key al valor ascii de cada caracter
+% Método: Backtracking
+decryptString(String, Key, NewString) :-
+  atom_chars(String, Chars),
+  decryptChars(Chars, Key, ModifiedChars),
+  atomic_list_concat(ModifiedChars, Atoms),
+  atom_string(Atoms, NewString).
+
+% Dominio: Element X String X Element
+% Descripción: Desencripta parcialmente el element, manteniendo el nombre, desencriptando los contenidos
+% Método: n/a
+partialDecrypt(Element, Password, NewElement) :-
+  element(Type, Name, Extra, Content, Security, CDate, MDate, Passkey, Element),
+  isFile(Type),
+  getPasswordEncryptionValue(Password, Value),
+  getPasskey(Password, Passkey),
+  decryptString(Content, Value, NewContent),
+  element(Type, Name, Extra, NewContent, Security, CDate, MDate, Passkey, NewElement).
+
+partialDecrypt(Element, Password, NewElement) :-
+  element(Type, Name, Extra, Content, Security, CDate, MDate, Passkey, Element),
+  \+ isFile(Type),
+  getPasskey(Password, Passkey),
+  fullDecryptContent(Content, Password, NewContent),
+  element(Type, Name, Extra, NewContent, Security, CDate, MDate, Passkey, NewElement).
+
+% Dominio: Element X String X Element
+% Descripción: Desencripta el elemento totalmente, desencriptando nombre y contenidos 
+% Método: n/a
+fullDecrypt(Element, Password, NewElement) :-
+  element(Type, Name, Extra, Content, Security, CDate, MDate, Passkey, Element),
+  isFile(Type),
+  getPasswordEncryptionValue(Password, Value),
+  getPasskey(Password, Passkey),
+  decryptString(Name, Value, NewName),
+  decryptString(Content, Value, NewContent),
+  element(Type, NewName, Extra, NewContent, Security, CDate, MDate, Passkey, NewElement).
+
+fullDecrypt(Element, Password, NewElement) :-
+  element(Type, Name, Extra, Content, Security, CDate, MDate, Passkey, Element),
+  getPasswordEncryptionValue(Password, Value),
+  getPasskey(Password, Passkey),
+  decryptString(Name, Value, NewName),
+  fullDecryptContent(Content, Password, NewContent),
+  element(Type, NewName, Extra, NewContent, Security, CDate, MDate, Passkey, NewElement).
+
+% Dominio: Element X String X String X List(String) X Element
+% Descripción: Desencripta en la ruta indicada, los elementos que cumplan el patrón
+% Método: Backtracking
+decryptFolder(Folder, Password, Pattern, [], NewFolder) :-
+  getElementContent(Folder, Content),
+  encryptElements(Content, Password, Pattern, NewContent),
+  setElementContent(Folder, NewContent, NewFolder).
+
+decryptFolder(Folder, Password, Pattern, [H | T], NewFolder) :-
+  getElementContent(Folder, Content),
+  getElementByName(Content, H, InnerFolder),
+  decryptFolder(InnerFolder, Password, Pattern, T, NewInnerFolder),
+  setContentByName(Content, NewInnerFolder, NewContent),
+  setElementContent(Folder, NewContent, NewFolder).

@@ -129,3 +129,48 @@ getStringFromContent([H | T], Parameters, Result) :-
   getStringFromElement(H, Parameters, Name),
   string_concat(Name, '\n', InnerString),
   string_concat(InnerString, InnerResult, Result).
+
+% Dominio: Lista(Elemento) x String x Lista(Elemento)
+% Descripción: Encripta todos los elementos.
+% Método: Backtracking
+fullEncryptContent([], _, []).
+
+fullEncryptContent([Element | Rest], Password, [NewElement | NewContent]) :-
+  fullEncrypt(Element, Password, NewElement),
+  fullEncryptContent(Rest, Password, NewContent).
+
+% Dominio: Lista(Elemento) x String x String x Lista(Elemento)
+% Descripción: Encripta los elementos que cumplan con el patrón entregado
+% Método: Backtracking
+encryptElements([], _, _, []).
+
+encryptElements([Element | Rest], Password, Pattern, [NewElement | NewContent]) :-
+  matchPattern(Element, Pattern),
+  encryptElements(Rest, Password, Pattern, NewContent),
+  partialEncrypt(Element, Password, NewElement).
+
+encryptElements([Element | Rest], Password, Pattern, [Element | NewContent]) :-
+  \+ matchPattern(Element, Pattern),
+  encryptElements(Rest, Password, Pattern, NewContent).
+
+% Dominio: Lista(Elemento) x String x Lista(Elemento)
+% Descripción: Desencripta todos los elementos del contenido
+% Método: Backtracking
+fullDecryptContent([], _, []).
+
+fullDecryptContent([Element | Rest], Password, [NewElement | NewContent]) :-
+  fullDecrypt(Element, Password, NewElement),
+  fullDecryptContent(Rest, Password, NewContent).
+
+% Dominio: Lista(Elemento) X String X String X Lista(Elemento)
+% Descripción: Desencripta los elementos que cumplan el patrón
+% Método: Backtracking
+decryptElements([], _, _, []).
+
+decryptElements([Element | Rest], Password, Pattern, [NewElement | NewContent]) :-
+  matchPattern(Element, Pattern),
+  decryptElements(Rest, Password, Pattern, NewContent),
+  partialDecrypt(Element, Password, NewElement).
+
+decryptElements([Element | Rest], Password, Pattern, [Element | NewContent]) :-
+  decryptElements(Rest, Password, Pattern, NewContent).

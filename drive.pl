@@ -239,3 +239,49 @@ formatDrive(Drives, Letter, Name, NewDrives) :-
   drive(_, _, Capacity, _, Drive),
   drive(Letter, Name, Capacity, [], NewDrive),
   setDrivesByLetter(Drives, NewDrive, Letter, NewDrives).
+
+% Dominio: Drive X String X String X List(String) X Drive
+% Descripción: Encripta el elemento de la ruta indicada
+% Método: n/a
+encryptDrive(Drive, Password, Pattern, [], NewDrive) :-
+  getDriveContent(Drive, Content),
+  encryptElements(Content, Password, Pattern, NewContent),
+  setDriveContent(Drive, NewContent, NewDrive).
+
+encryptDrive(Drive, Password, Pattern, [H | T], NewDrive) :-
+  getDriveContent(Drive, Content),
+  getElementByName(Content, H, Folder),
+  encryptFolder(Folder, Password, Pattern, T, NewFolder),
+  setContentByName(Content, NewFolder, NewContent),
+  setDriveContent(Drive, NewContent, NewDrive).
+
+% Dominio: List(Drive) X String X String X List(String) X List(Drive)
+% Descripción: Encripta el elemento en la ruta indicada
+% Método: n/a
+encryptDrives(Drives, Password, Pattern, [H | T], NewDrives) :-
+  getDriveByLetter(Drives, H, Drive),
+  encryptDrive(Drive, Password, Pattern, T, NewDrive),
+  setDrivesByLetter(Drives, NewDrive, H, NewDrives).
+
+% Dominio: Drive X String X String X List(String) X Drive
+% Descripción: Desencripta el elemento en la ruta indicada
+% Método: n/a
+decryptDrive(Drive, Password, Pattern, [], NewDrive) :-
+  getDriveContent(Drive, Content),
+  decryptElements(Content, Password, Pattern, NewContent),
+  setDriveContent(Drive, NewContent, NewDrive).
+
+decryptDrive(Drive, Password, Pattern, [H | T], NewDrive) :-
+  getDriveContent(Drive, Content),
+  getElementByName(Content, H, Folder),
+  decryptFolder(Folder, Password, Pattern, T, NewFolder),
+  setContentByName(Content, NewFolder, NewContent),
+  setDriveContent(Drive, NewContent, NewDrive).
+
+% Dominio: List(Drive) X String X String X List(String) X List(Drive)
+% Descripción: Desencripta el elemento en la ruta indicada
+% Método: n/a
+decryptDrives(Drives, Password, Pattern, [H | T], NewDrives) :-
+  getDriveByLetter(Drives, H, Drive),
+  decryptDrive(Drive, Password, Pattern, T, NewDrive),
+  setDrivesByLetter(Drives, NewDrive, H, NewDrives).

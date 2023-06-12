@@ -15,6 +15,15 @@ getTargetPath(Path, [Drive | Rest]) :-
 equal(A, A):- true.
 equal(_, _) :- false.
 
+word_length(Word, Length) :-
+  atom_chars(Word, Chars),
+  count_chars(Chars, 0, Length).
+
+count_chars([], Count, Count).
+count_chars([_|T], Acc, Length) :-
+  NewAcc is Acc + 1,
+  count_chars(T, NewAcc, Length).
+
 partesLista([H | T], H, T).
 
 cSystem(Name, Users, Drives, ActualU, ActualD, ActualR, CDate, MDate, Trash, [Name, Users, Drives, ActualU, ActualD, ActualR, CDate, MDate, Trash]).
@@ -174,3 +183,17 @@ systemDir(System, Params, String) :-
 % Método: n/a
 systemFormat(System, Letter, Name, NewSystem) :-
   formatSystem(System, Letter, Name, NewSystem).
+
+% Dominio: System X String X String X System
+% Descripción: Encripta el elemento con el nombre indicado, con la contraseña entregada
+% Método: n/a
+systemEncrypt(System, Password, Path, NewSystem) :-
+  getSystemActualR(System, Route),
+  encryptSystem(System, Password, Path, Route, NewSystem).
+
+% Dominio: System X String X String X System
+% Descripción: Desncripta el elemento con el nombre indicado, con la contraseña entregada
+% Método: n/a
+systemDecrypt(System, Password, Path, NewSystem) :-
+  getSystemActualR(System, Route),
+  decryptSystem(System, Password, Path, Route, NewSystem).

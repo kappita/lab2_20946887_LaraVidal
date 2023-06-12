@@ -1,4 +1,3 @@
-
 :- module(system_tda, [getSystemUsers/2, getSystemDrives/2, getSystemActualU/2,
   getSystemActualD/2, getSystemActualR/2, getSystemTrash/2, setSystemUsers/3,
 setSystemDrives/3, setSystemActualU/3, setSystemActualD/3, setSystemActualR/3,
@@ -211,3 +210,20 @@ formatSystem(System, Letter, Name, NewSystem) :-
   getSystemDrives(System, Drives),
   formatDrive(Drives, Letter, Name, NewDrives),
   setSystemDrives(System, NewDrives, NewSystem).
+
+% Dominio: System X String X String X List(String) X System
+% Descripción: Encripta en la ruta indicada
+% Método: n/a
+encryptSystem(System, Password, Pattern, Route, NewSystem) :-
+  getSystemDrives(System, Drives),
+  encryptDrives(Drives, Password, Pattern, Route, NewDrives),
+  setSystemDrives(System, NewDrives, NewSystem).
+
+% Dominio: System X String X String X List(String) X System
+% Descripción: Desencripta en la ruta indicada
+% Método: n/a
+decryptSystem(System, Password, Pattern, Route, NewSystem) :-
+  getSystemDrives(System, Drives),
+  decryptDrives(Drives, Password, Pattern, Route, NewDrives),
+  setSystemDrives(System, NewDrives, NewSystem).
+
