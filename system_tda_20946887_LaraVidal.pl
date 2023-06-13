@@ -1,19 +1,18 @@
-:- module(system_tda, [getSystemUsers/2, getSystemDrives/2, getSystemActualU/2,
+:- module(system_tda_20946887_LaraVidal, [cSystem/10, getSystemUsers/2, getSystemDrives/2, getSystemActualU/2,
   getSystemActualD/2, getSystemActualR/2, getSystemTrash/2, setSystemUsers/3,
 setSystemDrives/3, setSystemActualU/3, setSystemActualD/3, setSystemActualR/3,
-getElementsFromSystem/4, addElementsToSystem/4, addElementToSystem/4,
+setSystemTrash/3, getElementsFromSystem/4, addElementsToSystem/4, addElementToSystem/4,
 filterElementsFromSystem/4, sendToTrash/4, checkRouteExistsSystem/2, setSystemPath/3,
 checkRouteExistsSystem/2, renameElementFromSystem/5, getStringFromSystem/4, encryptSystem/5,
-decryptSystem/5, formatSystem/4]).
+decryptSystem/5, formatSystem/4, getElementsFromTrash/3, filterTrash/3, restoreTrash/3, showTrash/2]).
 
-:- use_module(content).
-:- use_module(drive).
-:- use_module(datestring).
+:- use_module(content_20946887_LaraVidal).
+:- use_module(drive_20946887_LaraVidal).
+:- use_module(datestring_20946887_LaraVidal).
+:- use_module(element_20946887_LaraVidal).
 
-
-partesLista( [ H | T], H, T).
+% Reglas
 equal(A, A).
-
 cSystem(Name, Users, Drives, ActualU, ActualD, ActualR, CDate, MDate, Trash, [Name, Users, Drives, ActualU, ActualD, ActualR, CDate, MDate, Trash]).
 
 % Dominio: Lista (Átomos) x Lista(Átomos)
@@ -149,10 +148,10 @@ sendToTrash(System, Elements, Route, NewSystem) :-
 % Dominio: Trash x Lista(Elemento) x Lista(string) x Trash
 % Descripción: Agrega elementos a la papelera con la ruta de origen
 % Método: Recursión
-% Probar reordenar.
-addElementsToTrash(_, [], _, []) :- !.
 
-addElementsToTrash(Trash, [H | T], Route, [[H, Route] |NewTrash]) :-
+addElementsToTrash(Trash, [], _, Trash).
+
+addElementsToTrash(Trash, [H | T], Route, [[H, Route] | NewTrash]) :-
   addElementsToTrash(Trash, T, Route, NewTrash).
 
 % Dominio: System x Lista(string)
@@ -227,3 +226,45 @@ decryptSystem(System, Password, Pattern, Route, NewSystem) :-
   decryptDrives(Drives, Password, Pattern, Route, NewDrives),
   setSystemDrives(System, NewDrives, NewSystem).
 
+% Dominio: Trash X String X Trash
+% Descripción: Obtiene los elementos de la papelera que cumplan el patrón
+% método: Backtracking
+getElementsFromTrash([], _, []).
+
+getElementsFromTrash([[Element, Route] | Rest], Pattern, [[Element, Route] | NewTrash]) :-
+  matchPattern(Element, Pattern),
+  getElementsFromTrash(Rest, Pattern, NewTrash).
+
+getElementsFromTrash([_, Rest], Pattern, NewTrash) :-
+  getElementsFromTrash(Rest, Pattern, NewTrash).
+
+% Dominio: System X Trash X System
+% Descripción: Restaura los elementos de la papelera al sistema
+% Método: Recursión
+restoreTrash(System, [], System).
+
+restoreTrash(System, [[Element, Route] | T], NewSystem) :-
+  addElementToSystem(System, Element, Route, NewInnerSystem),
+  restoreTrash(NewInnerSystem, T, NewSystem).
+
+%Dominio: Trash X String X Trash
+% Descripción: Elimina los elementos que cumplan el patrón de la basura
+% Método: Backtracking
+filterTrash([], _, []).
+
+filterTrash([[Element, Route] | Rest], Pattern, [[Element, Route] | NewTrash]) :-
+  \+ matchPattern(Element, Pattern),
+  filterTrash(Rest, Pattern, NewTrash).
+
+filterTrash([_ | Rest], Pattern, NewTrash) :-
+  filterTrash(Rest, Pattern, NewTrash).
+
+% Dominio: Trash X String
+% Descripción: Obtiene el nombre de todos los elementos de la papelera, formateado con \n
+% Método: Backtracking
+showTrash([], "").
+showTrash([[Element | _] | Rest], String) :-
+  getElementName(Element, Name),
+  string_concat(Name, "\n", Result),
+  showTrash(Rest, InnerString),
+  string_concat(InnerString, Result, String).

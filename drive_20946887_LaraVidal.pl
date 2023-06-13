@@ -1,4 +1,4 @@
-:- module(drive, [getDriveLetter/2, getDriveName/2, getDriveContent/2,
+:- module(drive_20946887_LaraVidal, [getDriveLetter/2, getDriveName/2, getDriveContent/2,
   setDriveContent/3, getElementsFromDrive/4, addElementToDrive/4,
   addElementsToDrive/4, filterElementsFromDrive/4, checkRouteExistsDrive/2,
   checkRouteExistsDrives/2, getElementsFromDrives/4, addElementToDrives/4,
@@ -7,17 +7,12 @@
   encryptDrives/5, encryptDrive/5, decryptDrives/5, decryptDrive/5,
   formatDrive/4]).
 
-:- use_module(content).
-:- use_module(element).
-:- use_module(datestring).
+:- use_module(content_20946887_LaraVidal).
+:- use_module(element_20946887_LaraVidal).
+:- use_module(datestring_20946887_LaraVidal).
 
-% Dominio: 
-% Descripción: 
-% Método: 
-partesLista([H | T], H, T).
-
+% Reglas
 drive(Letter, Name, Capacity, Content, [Letter, Name, Capacity, Content]).
-
 listaVacia([]).
 
 % Dominio: Drive x String
@@ -63,14 +58,12 @@ getElementsFromDrive(Drive, Pattern, [H | T], Elements) :-
 % Dominio: Drive x Element x Lista(String) x Drive
 % Descripción: Agrega un elemento a los contenidos del drive en la ruta.
 % Método: n/a
-addElementToDrive(Drive, Element, Route, NewDrive) :-
-  listaVacia(Route),
+addElementToDrive(Drive, Element, [], NewDrive) :-
   getDriveContent(Drive, Content),
   addElementToContent(Content, Element, NewContent),
   setDriveContent(Drive, NewContent, NewDrive).
 
-addElementToDrive(Drive, Element, Route, NewDrive) :-
-  partesLista(Route, H, T),
+addElementToDrive(Drive, Element, [H | T], NewDrive) :-
   getDriveContent(Drive, Content),
   getElementByName(Content, H, Folder),
   addElementToFolder(Folder, Element, T, NewFolder),
@@ -80,14 +73,12 @@ addElementToDrive(Drive, Element, Route, NewDrive) :-
 % Dominio: Drive x Lista(Elemento) x Lista(string) x Drive
 % Descripción: Agrega una lista de elementos a los contenidos del drive en la ruta.
 % Método: n/a
-addElementsToDrive(Drive, Elements, Route, NewDrive) :-
-  listaVacia(Route),
+addElementsToDrive(Drive, Elements, [], NewDrive) :-
   getDriveContent(Drive, Content),
   addElementsToContent(Content, Elements, NewContent),
   setDriveContent(Drive, NewContent, NewDrive).
 
-addElementsToDrive(Drive, Elements, Route, NewDrive) :-
-  partesLista(Route, H, T),
+addElementsToDrive(Drive, Elements, [H | T], NewDrive) :-
   getDriveContent(Drive, Content),
   getElementByName(Content, H, Folder),
   addElementsToFolder(Folder, Elements, T, NewFolder),
@@ -97,14 +88,12 @@ addElementsToDrive(Drive, Elements, Route, NewDrive) :-
 % Dominio: Drive x String x Lista(string) x Drive
 % Descripción: Filtra los elementos que cumplan un patrón de la ruta del contenido del drive
 % Método: n/a
-filterElementsFromDrive(Drive, Pattern, Route, NewDrive) :-
-  listaVacia(Route),
+filterElementsFromDrive(Drive, Pattern, [], NewDrive) :-
   getDriveContent(Drive, Content),
   filterElementsFromContent(Content, Pattern, NewContent),
   setDriveContent(Drive, NewContent, NewDrive).
 
-filterElementsFromDrive(Drive, Pattern, Route, NewDrive) :-
-  partesLista(Route, H, T),
+filterElementsFromDrive(Drive, Pattern, [H | T], NewDrive) :-
   getDriveContent(Drive, Content),
   getElementByName(Content, H, Folder),
   filterElementsFromFolder(Folder, Pattern, T, NewFolder),

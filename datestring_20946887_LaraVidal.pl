@@ -1,4 +1,4 @@
-:- module(datestring, [getDateString/1]).
+:- module(datestring_20946887_LaraVidal, [getDateString/1]).
 
 
 % Dominio: date x int x int x int

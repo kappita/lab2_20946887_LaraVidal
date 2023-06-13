@@ -1,24 +1,20 @@
-:- module(element, [isFile/1, matchPattern/2, getElementType/2, getElementName/2,
+:- module(element_20946887_LaraVidal, [element/8, isFile/1, matchPattern/2, getElementType/2, getElementName/2,
   getElementsFromFolder/4, checkRouteExistsFolder/2, clearPath/2,
   addElementToFolder/4, addElementsToFolder/4, filterElementsFromFolder/4, setElementName/3, getStringFromElement/3,
   partialEncrypt/3, fullEncrypt/3, getStringFromFolder/4, renameElementFromFolder/5, encryptFolder/5,
   decryptFolder/5, partialDecrypt/3, fullDecrypt/3]).
 
-:- use_module(content).
-:- use_module(element).
-:- use_module(datestring).
+:- use_module(content_20946887_LaraVidal).
+:- use_module(element_20946887_LaraVidal).
+:- use_module(datestring_20946887_LaraVidal).
 
-element(Type, Name, Extra, Content, Security, CDate, MDate, Passkey ,[Type, Name, Extra, Content, Security, CDate, MDate, Passkey]).
+% Reglas
+element(Type, Name, Extra, Content, CDate, MDate, Passkey, [Type, Name, Extra, Content, CDate, MDate, Passkey]).
+isFile("file").
+equal(A, A).
 
-listaVacia([]).
-
-isFile("file") :- true.
-isFile(_) :- false.
-
-equal(A, A) :- true.
-
-partesLista([H | T], H, T).
-
+% Dominio: String
+% Descripción: Confirma que un nombre sea privado revisando si su nombre comienza con "."
 isPrivate(Name) :-
   atom_chars(Name, ['.' | _]).
 
@@ -64,41 +60,40 @@ matchPattern(Element, Pattern) :-
 % Descripción: Entrega el tipo de un elemento
 % Método: n/a
 getElementType(Element, Type) :-
-  element(Type, _, _, _, _, _, _, _, Element).
+  element(Type, _, _, _, _, _, _, Element).
 
 % Dominio: Elemento x String
 % Descripción: Entrega el nombre de un elemento.
 % Método: n/a
 getElementName(Element, Name) :-
-  element(_, Name, _, _, _, _, _, _, Element).
+  element(_, Name, _, _, _, _, _, Element).
 
 % Dominio: Elemento x (Lista(Elemento) or String)
 % Descripción: Obtiene el contenido de un elemento
 % Método: n/a
 getElementContent(Element, Content) :-
-  element(_, _, _, Content, _, _, _, _, Element).
+  element(_, _, _, Content, _, _, _, Element).
 
 % Dominio: Element X String X Element
 % Descripción: Cambia el nombre de un elemento
 % Método: n/a
 setElementName(Element, NewName, NewElement) :-
-  element(Type, _, Extra, Content, Security, CDate, _, Passkey , Element),
+  element(Type, _, Extra, Content, CDate, _, Passkey , Element),
   getDateString(Date),
-  element(Type, NewName, Extra, Content, Security, CDate, Date, Passkey, NewElement).
+  element(Type, NewName, Extra, Content, CDate, Date, Passkey, NewElement).
 
 % Dominio: Elemento x (Lista(Elemento) or string) x Elemento
 % Descripción: Reemplaza los contenidos de un elemento
 % Método: n/a
 setElementContent(Element, NewContent, NewElement) :-
-  element(Type, Name, Extra, _, Security, CDate, _, Passkey, Element),
+  element(Type, Name, Extra, _, CDate, _, Passkey, Element),
   getDateString(Date),
-  element(Type, Name, Extra, NewContent, Security, CDate, Date, Passkey, NewElement).
+  element(Type, Name, Extra, NewContent, CDate, Date, Passkey, NewElement).
 
 % Dominio: Elemento x String x List(String) x Lista(Element)
 % Descripción: Obtiene los elementos de una carpeta que cumplan un patrón a partir de su ruta.
 % Método: Recursión
-getElementsFromFolder(Element, Pattern, Route, Elements) :-
-  listaVacia(Route),
+getElementsFromFolder(Element, Pattern, [], Elements) :-
   getElementContent(Element, Content),
   getElementsFromContent(Content, Pattern, Elements).
 
@@ -113,7 +108,8 @@ getElementsFromFolder(Element, Pattern, [H | T], Elements) :-
 checkRouteExistsFolder(_, []).
 
 checkRouteExistsFolder(Element, [H | T]) :-
-  \+ isFile(Element),
+  getElementType(Element, Type),
+  \+ isFile(Type),
   getElementContent(Element, Content),
   getElementByName(Content, H, InnerElement),
   checkRouteExistsFolder(InnerElement, T).
@@ -134,15 +130,12 @@ clearPath([_ | T], NewPath) :-
 % Dominio: Element x Element x Lista(string) x Element
 % Descripción: Agrega un elemento a los contenidos de un elemento a partir de la ruta.
 % Método: Recursión
-addElementToFolder(Folder, Element, Route, NewFolder) :-
-  listaVacia(Route),
-  % Then
+addElementToFolder(Folder, Element, [], NewFolder) :-
   getElementContent(Folder, Content),
   addElementToContent(Content, Element, NewContent),
   setElementContent(Folder, NewContent, NewFolder).
 
-addElementToFolder(Folder, Element, Route, NewFolder) :-
-  partesLista(Route, H, T),
+addElementToFolder(Folder, Element, [H | T], NewFolder) :-
   getElementContent(Folder, Content),
   getElementByName(Content, H, InnerFolder),
   addElementToFolder(InnerFolder, Element, T, NewInnerFolder),
@@ -157,8 +150,7 @@ addElementsToFolder(Folder, Elements, [], NewFolder) :-
   addElementsToContent(Content, Elements, NewContent),
   setElementContent(Folder, NewContent, NewFolder).
 
-addElementsToFolder(Folder, Elements, Route, NewFolder) :-
-  partesLista(Route, H, T),
+addElementsToFolder(Folder, Elements, [H | T], NewFolder) :-
   getElementContent(Folder, Content),
   getElementByName(Content, H, InnerFolder),
   addElementsToFolder(InnerFolder, Elements, T, NewInnerFolder),
@@ -168,14 +160,12 @@ addElementsToFolder(Folder, Elements, Route, NewFolder) :-
 % Dominio: Elemento x String x Lista(String) x Elemento
 % Descripción: Elimina los elementos que cumplan un patrón de los contenidos del elemento
 % Método: Recursión
-filterElementsFromFolder(Folder, Pattern, Route, NewFolder) :-
-  listaVacia(Route),
+filterElementsFromFolder(Folder, Pattern, [], NewFolder) :-
   getElementContent(Folder, Content),
   filterElementsFromContent(Content, Pattern, NewContent),
   setElementContent(Folder, NewContent, NewFolder).
 
-filterElementsFromFolder(Folder, Pattern, Route, NewFolder) :-
-  partesLista(Route, H, T),
+filterElementsFromFolder(Folder, Pattern, [H | T], NewFolder) :-
   getElementContent(Folder, Content),
   getElementByName(Content, H, InnerFolder),
   filterElementsFromFolder(InnerFolder, Pattern, T, NewInnerFolder),
@@ -185,8 +175,7 @@ filterElementsFromFolder(Folder, Pattern, Route, NewFolder) :-
 % Dominio: Element X String X String X List(String) X Element
 % Descripción: Renombra los elementos en la ruta indicada
 % Método: Recursión
-renameElementFromFolder(Folder, Original, NewName, Route, NewFolder) :-
-  listaVacia(Route),
+renameElementFromFolder(Folder, Original, NewName, [], NewFolder) :-
   getElementContent(Folder, Content),
   renameElementFromContent(Content, Original, NewName, NewContent),
   setElementContent(Folder, NewContent, NewFolder).
@@ -231,39 +220,39 @@ getStringFromFolder(Folder, Parameters, [H | T], String) :-
 % Descripción: Encripta inicialmente el elemento, es decir, no modifica su nombre
 % Método: n/a
 partialEncrypt(Element, Password, NewElement) :-
-  element(Type, Name, Extra, Content, Security, CDate, MDate, _, Element),
+  element(Type, Name, Extra, Content, CDate, MDate, _, Element),
   isFile(Type),
   getPasswordEncryptionValue(Password, Value),
   getPasskey(Password, Passkey),
   encryptString(Content, Value, NewContent),
-  element(Type, Name, Extra, NewContent, Security, CDate, MDate, Passkey, NewElement).
+  element(Type, Name, Extra, NewContent, CDate, MDate, Passkey, NewElement).
 
 partialEncrypt(Element, Password, NewElement) :-
-  element(Type, Name, Extra, Content, Security, CDate, MDate, _, Element),
+  element(Type, Name, Extra, Content, CDate, MDate, _, Element),
   \+ isFile(Type),
   getPasskey(Password, Passkey),
   fullEncryptContent(Content, Password, NewContent),
-  element(Type, Name, Extra, NewContent, Security, CDate, MDate, Passkey, NewElement).
+  element(Type, Name, Extra, NewContent, CDate, MDate, Passkey, NewElement).
 
 % Dominio: Element X String X Element
 % Descripción: Encripta totalmente el elemento, es decir, su nombre y su contenido
 % Método: n/a
 fullEncrypt(Element, Password, NewElement) :-
-  element(Type, Name, Extra, Content, Security, CDate, MDate, _, Element),
+  element(Type, Name, Extra, Content, CDate, MDate, _, Element),
   isFile(Type),
   getPasswordEncryptionValue(Password, Value),
   getPasskey(Password, Passkey),
   encryptString(Name, Value, NewName),
   encryptString(Content, Value, NewContent),
-  element(Type, NewName, Extra, NewContent, Security, CDate, MDate, Passkey, NewElement).
+  element(Type, NewName, Extra, NewContent, CDate, MDate, Passkey, NewElement).
 
 fullEncrypt(Element, Password, NewElement) :-
-  element(Type, Name, Extra, Content, Security, CDate, MDate, _, Element),
+  element(Type, Name, Extra, Content, CDate, MDate, _, Element),
   getPasswordEncryptionValue(Password, Value),
   getPasskey(Password, Passkey),
   encryptString(Name, Value, NewName),
   fullEncryptContent(Content, Password, NewContent),
-  element(Type, NewName, Extra, NewContent, Security, CDate, MDate, Passkey, NewElement).
+  element(Type, NewName, Extra, NewContent, CDate, MDate, Passkey, NewElement).
 
 % Dominio: List(Char) X int
 % Descripción: Obtiene la suma de los valores ASCII de todos los caracteres
@@ -361,39 +350,39 @@ decryptString(String, Key, NewString) :-
 % Descripción: Desencripta parcialmente el element, manteniendo el nombre, desencriptando los contenidos
 % Método: n/a
 partialDecrypt(Element, Password, NewElement) :-
-  element(Type, Name, Extra, Content, Security, CDate, MDate, Passkey, Element),
+  element(Type, Name, Extra, Content, CDate, MDate, Passkey, Element),
   isFile(Type),
   getPasswordEncryptionValue(Password, Value),
   getPasskey(Password, Passkey),
   decryptString(Content, Value, NewContent),
-  element(Type, Name, Extra, NewContent, Security, CDate, MDate, Passkey, NewElement).
+  element(Type, Name, Extra, NewContent, CDate, MDate, Passkey, NewElement).
 
 partialDecrypt(Element, Password, NewElement) :-
-  element(Type, Name, Extra, Content, Security, CDate, MDate, Passkey, Element),
+  element(Type, Name, Extra, Content, CDate, MDate, Passkey, Element),
   \+ isFile(Type),
   getPasskey(Password, Passkey),
   fullDecryptContent(Content, Password, NewContent),
-  element(Type, Name, Extra, NewContent, Security, CDate, MDate, Passkey, NewElement).
+  element(Type, Name, Extra, NewContent, CDate, MDate, Passkey, NewElement).
 
 % Dominio: Element X String X Element
 % Descripción: Desencripta el elemento totalmente, desencriptando nombre y contenidos 
 % Método: n/a
 fullDecrypt(Element, Password, NewElement) :-
-  element(Type, Name, Extra, Content, Security, CDate, MDate, Passkey, Element),
+  element(Type, Name, Extra, Content, CDate, MDate, Passkey, Element),
   isFile(Type),
   getPasswordEncryptionValue(Password, Value),
   getPasskey(Password, Passkey),
   decryptString(Name, Value, NewName),
   decryptString(Content, Value, NewContent),
-  element(Type, NewName, Extra, NewContent, Security, CDate, MDate, Passkey, NewElement).
+  element(Type, NewName, Extra, NewContent, CDate, MDate, Passkey, NewElement).
 
 fullDecrypt(Element, Password, NewElement) :-
-  element(Type, Name, Extra, Content, Security, CDate, MDate, Passkey, Element),
+  element(Type, Name, Extra, Content, CDate, MDate, Passkey, Element),
   getPasswordEncryptionValue(Password, Value),
   getPasskey(Password, Passkey),
   decryptString(Name, Value, NewName),
   fullDecryptContent(Content, Password, NewContent),
-  element(Type, NewName, Extra, NewContent, Security, CDate, MDate, Passkey, NewElement).
+  element(Type, NewName, Extra, NewContent, CDate, MDate, Passkey, NewElement).
 
 % Dominio: Element X String X String X List(String) X Element
 % Descripción: Desencripta en la ruta indicada, los elementos que cumplan el patrón

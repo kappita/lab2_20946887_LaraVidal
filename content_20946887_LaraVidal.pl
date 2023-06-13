@@ -1,11 +1,12 @@
-:- module(content, [getContentNames/2, getElementByName/3, getElementsFromContent/3,
+:- module(content_20946887_LaraVidal, [getContentNames/2, getElementByName/3, getElementsFromContent/3,
   setContentByName/3, addElementToContent/3, addElementsToContent/3,
   filterElementsFromContent/3, encryptElements/4, fullEncryptContent/3,
   getStringFromContent/3, renameElementFromContent/4, fullDecryptContent/3,
   decryptElements/4]).
 
-:- use_module(element).
+:- use_module(element_20946887_LaraVidal).
 
+% Reglas
 equal(A, A).
 
 % Dominio: Lista (Elementos) x Lista(Strings)
@@ -23,7 +24,7 @@ getContentNames([FirstElement | Rest], [Name | NewList]) :-
 % Método: n/a
 getElementByName([], _, _) :- false.
 
-getElementByName([[Type, Name, Extra, Content, Security, CDate, Mdate, Passkey] | _ ], Name, [Type, Name, Extra, Content, Security, CDate, Mdate, Passkey]).
+getElementByName([[Type, Name, Extra, Content, CDate, Mdate, Passkey] | _ ], Name, [Type, Name, Extra, Content, CDate, Mdate, Passkey]).
 
 getElementByName([ _ | T], Name, Element) :-
   getElementByName(T, Name, Element).
@@ -46,8 +47,8 @@ getElementsFromContent([_ | Rest], Pattern, NewList) :-
 % Método: Backtracking
 setContentByName([], _, []) :- !.
 
-setContentByName([[_, Name, _, _, _, _, _, _] | Rest], [Type, Name, Extra, Content, Security, CDate, MDate, Passkey], [[Type, Name, Extra, Content, Security, CDate, MDate, Passkey] | NewContent]) :-
-  setContentByName(Rest, [Type, Name, Extra, Content, Security, CDate, MDate, Passkey], NewContent).
+setContentByName([[_, Name, _, _, _, _, _] | Rest], [Type, Name, Extra, Content, CDate, MDate, Passkey], [[Type, Name, Extra, Content, CDate, MDate, Passkey] | NewContent]) :-
+  setContentByName(Rest, [Type, Name, Extra, Content, CDate, MDate, Passkey], NewContent).
 
 setContentByName([FirstElement | Rest], NewElement, [FirstElement | NewContent]):-
   setContentByName(Rest, NewElement, NewContent).
@@ -56,14 +57,16 @@ setContentByName([FirstElement | Rest], NewElement, [FirstElement | NewContent])
 % Descripción: Agrega el elemento a lista de elementos, según si es archivo o carpeta
 % Método: n/a
 addElementToContent(Content, Element, NewContent) :-
-  isFile(Element),
+  getElementType(Element, Type),
+  isFile(Type),
   getElementName(Element, Name),
   getContentNames(Content, Names),
   member(Name, Names),
   setContentByName(Content, Element, NewContent).
 
 addElementToContent(Content, Element, NewContent) :-
-  isFile(Element),
+  getElementType(Element, Type),
+  isFile(Type),
   append([Element], Content, NewContent).
 
 addElementToContent(Content, Element, NewContent) :-
